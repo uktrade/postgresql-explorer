@@ -1,3 +1,5 @@
-lib/
-node_modules/
-*.theia
+out
+dist
+node_modules
+.vscode-test/
+*.vsix

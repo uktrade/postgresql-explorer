@@ -1,4 +1,4 @@
-import * as theia from '@theia/plugin';
+import * as vscode from 'vscode';
 import { setupPostgresLanguageClient } from './language/client';
 import { PostgreSQLTreeDataProvider } from './tree';
 import { getRunQueryAndDisplayResults } from './results';
@@ -12,7 +12,7 @@ import { getRunCommand } from './commands/runQuery';
 import { getSaveResultCommand } from './commands/saveResult';
 import { getSelectTopCommand } from './commands/selectTop';
 
-export async function start(context: theia.PluginContext) {
+export async function activate(context: vscode.ExtensionContext) {
   // node-postgresql almost supports all libpq environment variables, but
   // not the PGSSL* ones, presumably to be able to pass in certs and keys
   // as strings
@@ -27,17 +27,17 @@ export async function start(context: theia.PluginContext) {
   });
 
   const tree = new PostgreSQLTreeDataProvider(pool);
-  context.subscriptions.push(theia.window.registerTreeDataProvider('postgres', tree));
+  context.subscriptions.push(vscode.window.registerTreeDataProvider('postgres', tree));
 
   const { runQueryAndDisplayResults, getActiveResults } = getRunQueryAndDisplayResults(pool);
-  context.subscriptions.push(theia.commands.registerCommand('theia-postgres.newQuery', getNewQueryCommand()));
-  context.subscriptions.push(theia.commands.registerCommand('theia-postgres.refresh', getRefreshCommand(tree)));
-  context.subscriptions.push(theia.commands.registerCommand('theia-postgres.runQuery', getRunCommand(runQueryAndDisplayResults)));
-  context.subscriptions.push(theia.commands.registerCommand('theia-postgres.saveResult', getSaveResultCommand(getActiveResults)));
-  context.subscriptions.push(theia.commands.registerCommand('theia-postgres.selectTop', getSelectTopCommand(runQueryAndDisplayResults)));
+  context.subscriptions.push(vscode.commands.registerCommand('posgresql-explorer.newQuery', getNewQueryCommand()));
+  context.subscriptions.push(vscode.commands.registerCommand('posgresql-explorer.refresh', getRefreshCommand(tree)));
+  context.subscriptions.push(vscode.commands.registerCommand('posgresql-explorer.runQuery', getRunCommand(runQueryAndDisplayResults)));
+  context.subscriptions.push(vscode.commands.registerCommand('posgresql-explorer.saveResult', getSaveResultCommand(getActiveResults)));
+  context.subscriptions.push(vscode.commands.registerCommand('posgresql-explorer.selectTop', getSelectTopCommand(runQueryAndDisplayResults)));
 
   await setupPostgresLanguageClient(context);
 }
 
-export function stop() {
+export function deactivate() {
 }

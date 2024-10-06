@@ -1,18 +1,18 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as theia from '@theia/plugin';
+import * as vscode from 'vscode';
 import { TableNode } from "../tree";
 import { Client } from 'pg';
 
 
-export function getSelectTopCommand(runQueryAndDisplayResults) {
+export function getSelectTopCommand(runQueryAndDisplayResults: any) {
   return async function run(treeNode: TableNode) {
-    const countInput: string = await theia.window.showInputBox({ prompt: "Select how many?", placeHolder: "limit" });
+    const countInput = await vscode.window.showInputBox({ prompt: "Select how many?", placeHolder: "limit" });
     if (!countInput) return;
 
     const count: number = parseInt(countInput);
     if (Number.isNaN(count)) {
-      theia.window.showErrorMessage('Invalid quantity for selection - should be a number');
+      vscode.window.showErrorMessage('Invalid quantity for selection - should be a number');
       return;
     }
 
@@ -22,14 +22,14 @@ export function getSelectTopCommand(runQueryAndDisplayResults) {
     const sql = `SELECT * FROM ${quoted} LIMIT ${count};`
 
     var index = 1;
-    const getPath = () => `/home/theia/untitled-${index}.sql`
+    const getPath = () => `/home/vscode/untitled-${index}.sql`
     while (fs.existsSync(getPath())) {
       ++index;
     }
     fs.writeFileSync(getPath(), sql, 'utf8');
 
-    const textDocument = await theia.workspace.openTextDocument(getPath());
-    await theia.window.showTextDocument(textDocument);
+    const textDocument = await vscode.workspace.openTextDocument(getPath());
+    await vscode.window.showTextDocument(textDocument);
 
     const title = path.basename(textDocument.fileName);
     return runQueryAndDisplayResults(sql, textDocument.uri, title);

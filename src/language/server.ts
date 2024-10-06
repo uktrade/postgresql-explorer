@@ -89,7 +89,7 @@ documents.listen(connection);
 let shouldSendDiagnosticRelatedInformation: boolean = false;
 
 connection.onInitialize((_params): InitializeResult => {
-  shouldSendDiagnosticRelatedInformation = _params.capabilities && _params.capabilities.textDocument && _params.capabilities.textDocument.publishDiagnostics && _params.capabilities.textDocument.publishDiagnostics.relatedInformation;
+  shouldSendDiagnosticRelatedInformation = (_params.capabilities && _params.capabilities.textDocument && _params.capabilities.textDocument.publishDiagnostics && _params.capabilities.textDocument.publishDiagnostics.relatedInformation) || false;
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Full,
@@ -114,7 +114,7 @@ connection.onRequest('set_connection', async function() {
   try {
     await setupDBConnection()
   } catch (err) {
-    console.log(err.message)
+    console.log(err)
   }
 });
 
