@@ -1,32 +1,16 @@
 {
-  "name": "theia-postgres",
-  "displayName": "PostgreSQL",
-  "description": "PostgreSQL explorer",
+  "name": "postgresql-explorer",
+  "displayName": "PostgreSQL Explorer",
+  "description": "A client to query a PostgreSQL database from within Visual Studio Code",
   "version": "0.0.1",
-  "publisher": "dit",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/uktrade/theia-postgres"
-  },
-  "keywords": [
-    "theia-plugin"
-  ],
   "engines": {
-    "theiaPlugin": "latest"
+    "vscode": "^1.93.1"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "*"
-  ],
-  "files": [
-    "src"
-  ],
-  "theiaPlugin": {
-    "backend": "lib/extension.js"
-  },
+  "activationEvents": [],
+  "main": "./dist/extension.js",
   "contributes": {
     "languages": [
       {
@@ -51,14 +35,14 @@
     ],
     "keybindings": [
       {
-        "command": "theia-postgres.runQuery",
+        "command": "posgresql-explorer.runQuery",
         "key": "f5",
         "when": "editorLangId == postgres"
       }
     ],
     "commands": [
       {
-        "command": "theia-postgres.newQuery",
+        "command": "posgresql-explorer.newQuery",
         "title": "New Query",
         "icon": {
           "light": "resources/light/new-query.svg",
@@ -67,7 +51,7 @@
         "category": "PostgreSQL"
       },
       {
-        "command": "theia-postgres.refresh",
+        "command": "posgresql-explorer.refresh",
         "title": "Refresh",
         "category": "PostgreSQL",
         "icon": {
@@ -76,7 +60,7 @@
         }
       },
       {
-        "command": "theia-postgres.selectTop",
+        "command": "posgresql-explorer.selectTop",
         "title": "Select Top...",
         "category": "PostgreSQL",
         "icon": {
@@ -85,7 +69,7 @@
         }
       },
       {
-        "command": "theia-postgres.runQuery",
+        "command": "posgresql-explorer.runQuery",
         "title": "Run Query",
         "category": "PostgreSQL",
         "icon": {
@@ -94,7 +78,7 @@
         }
       },
       {
-        "command": "theia-postgres.saveResult",
+        "command": "posgresql-explorer.saveResult",
         "title": "Save Result",
         "category": "PostgreSQL",
         "icon": {
@@ -106,58 +90,58 @@
     "menus": {
       "editor/title": [
         {
-          "command": "theia-postgres.saveResult",
+          "command": "posgresql-explorer.saveResult",
           "when": "theiaPostgresResultFocus",
           "group": "navigation"
         },
         {
-          "command": "theia-postgres.runQuery",
+          "command": "posgresql-explorer.runQuery",
           "when": "editorLangId == postgres",
           "group": "navigation"
         }
       ],
       "view/title": [
         {
-          "command": "theia-postgres.refresh",
+          "command": "posgresql-explorer.refresh",
           "when": "view == postgres",
           "group": "navigation@1"
         },
         {
-          "command": "theia-postgres.newQuery",
+          "command": "posgresql-explorer.newQuery",
           "when": "view == postgres",
           "group": "navigation@2"
         }
       ],
       "commandPalette": [
         {
-          "command": "theia-postgres.runQuery",
+          "command": "posgresql-explorer.runQuery",
           "when": "editorLangId != postgres && editorHasSelection && !editorHasMultipleSelections"
         },
         {
-          "command": "theia-postgres.selectTop",
-          "when": "config.theia-postgres.never"
+          "command": "posgresql-explorer.selectTop",
+          "when": "config.posgresql-explorer.never"
         },
         {
-          "command": "theia-postgres.saveResult",
-          "when": "config.theia-postgres.never"
+          "command": "posgresql-explorer.saveResult",
+          "when": "config.posgresql-explorer.never"
         }
       ],
       "editor/context": [
         {
-          "command": "theia-postgres.runQuery",
+          "command": "posgresql-explorer.runQuery",
           "when": "editorLangId != postgres && editorHasSelection && !editorHasMultipleSelections",
           "group": "navigation"
         },
         {
-          "command": "theia-postgres.runQuery",
+          "command": "posgresql-explorer.runQuery",
           "when": "editorLangId == postgres",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "theia-postgres.selectTop",
-          "when": "view == postgres && viewItem == theia-postgres.tree.table",
+          "command": "posgresql-explorer.selectTop",
+          "when": "view == postgres && viewItem == posgresql-explorer.tree.table",
           "group": "inline"
         }
       ]
@@ -169,7 +153,11 @@
           "title": "Datasets",
           "icon": "resources/postgres-explorer.svg"
         }
-      ]
+      ],
+       "panel": [{
+          "id": "postgresql-explorer.results",
+          "title": "Query results"
+       }]
     },
     "views": {
       "postgres-explorer": [
@@ -181,37 +169,39 @@
     }
   },
   "scripts": {
-    "prepare": "yarn run clean && yarn run build",
-    "clean": "rimraf lib",
-    "format-code": "tsfmt -r",
-    "watch": "tsc -watch",
-    "compile": "tsc",
-    "build": "yarn run format-code && yarn run compile && theia-plugin pack"
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
   },
   "devDependencies": {
-    "@theia/plugin": "latest",
-    "@theia/plugin-packager": "latest",
-    "@types/csv-stringify": "^1.4.2",
-    "@types/keytar": "^4.0.1",
-    "@types/mocha": "^2.2.42",
-    "@types/node": "^16.11.7",
-    "@types/pg": "^7.14.4",
-    "@types/vscode": "^1.69.0",
-    "rimraf": "3.0.2",
-    "typescript": "^4.7.4",
-    "typescript-formatter": "7.2.2"
+    "@types/mocha": "^10.0.8",
+    "@types/node": "20.x",
+    "@types/pg": "^8.11.10",
+    "@types/vscode": "^1.93.1",
+    "@typescript-eslint/eslint-plugin": "^8.7.0",
+    "@typescript-eslint/parser": "^8.7.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.11.1",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.6.2"
   },
   "dependencies": {
-    "csv-stringify": "^3.1.1",
+    "csv-stringify": "^6.5.1",
     "pg": "^8.3.0",
     "pg-cursor": "^2.3.0",
     "vscode-languageclient": "^7.0.0",
     "vscode-languageserver": "^7.0.0",
     "vscode-languageserver-textdocument": "^1.0.1"
-  },
-  "resolutions": {
-    "mem": "^4.0.0",
-    "yargs-parser": "~18.1.2",
-    "semver": "7.5.2"
   }
 }

@@ -1,17 +1,17 @@
 import * as fs from 'fs';
-import * as theia from '@theia/plugin';
-import * as csv from 'csv-stringify';
+import * as vscode from 'vscode';
+import { stringify } from 'csv-stringify';
 import { QueryResults } from "../results";
 
-interface SaveTableQuickPickItem extends theia.QuickPickItem {
+interface SaveTableQuickPickItem extends vscode.QuickPickItem {
   readonly index: number;
 }
 
 export function getSaveResultCommand(getActiveResults: () => QueryResults[]) {
-  return async function run(uri: theia.Uri) {
+  return async function run(uri: vscode.Uri) {
     let results = getActiveResults();
     if (!results) {
-      theia.window.showWarningMessage('Unable to save data - dataset not found');
+      vscode.window.showWarningMessage('Unable to save data - dataset not found');
       return;
     }
 
@@ -25,21 +25,21 @@ export function getSaveResultCommand(getActiveResults: () => QueryResults[]) {
         });
       }
 
-      let selected = await theia.window.showQuickPick(tables, {});
+      let selected = await vscode.window.showQuickPick(tables, {});
       if (!selected) return;
       resultIndex = selected.index;
     }
 
-    if (results[resultIndex].rowCount < 1) {
-      theia.window.showWarningMessage('Unable to save data - table has no data');
+    if ((results[resultIndex].rowCount || 0) < 1) {
+      vscode.window.showWarningMessage('Unable to save data - table has no data');
       return;
     }
 
     let formats = ['csv', 'json'];
-    let selFormat = await theia.window.showQuickPick(formats, {});
+    let selFormat = await vscode.window.showQuickPick(formats, {});
     if (!selFormat) return;
 
-    let fileData: string;
+    let fileData: string = '';
     if (selFormat === 'json') {
       let data = transformResult(results[resultIndex]);
       fileData = JSON.stringify(data, null, 2);
@@ -50,11 +50,11 @@ export function getSaveResultCommand(getActiveResults: () => QueryResults[]) {
       });
 
       fileData = await new Promise<string>((resolve) => {
-        csv(results[resultIndex].rows, {
+        stringify(results[resultIndex].rows, {
           header: true,
           columns: columns,
-          formatters: {
-            bool: (value: boolean): string => {
+          cast: {
+            boolean: (value: boolean): string => {
               return value ? 'true' : 'false';
             }
           }
@@ -66,12 +66,12 @@ export function getSaveResultCommand(getActiveResults: () => QueryResults[]) {
     }
 
     var index = 1;
-    const getPath = () => `/home/theia/untitled-${index}.${selFormat}`
+    const getPath = () => `/home/vscode/untitled-${index}.${selFormat}`
     while (fs.existsSync(getPath())) {
       ++index;
     }
     fs.writeFileSync(getPath(), fileData, 'utf8');
-    await theia.window.showTextDocument(await theia.workspace.openTextDocument(getPath()));
+    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(getPath()));
   }
 }
 
@@ -80,9 +80,9 @@ function transformResult(result: QueryResults) {
   return result.rows.map(trxFunc);
 }
 
-function transformData(fields, row) {
-  let newRow = {};
-  let fieldCounts = {};
+function transformData(fields: Array<any>, row: Array<any>) {
+  let newRow: { [key: string]: any; } = {};
+  let fieldCounts: { [key: string]: number; } = {};
   fields.forEach((field, idx) => {
     if (fieldCounts.hasOwnProperty(field)) {
       fieldCounts[field.name]++;

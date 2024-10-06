@@ -1,9 +1,9 @@
-import * as theia from '@theia/plugin';
+import * as vscode from 'vscode';
 import { Pool, Client } from 'pg';
 
 
 interface Node {
-  getTreeItem(): theia.TreeItem;
+  getTreeItem(): vscode.TreeItem;
   getChildren(): Promise<Node[]>;
 }
 
@@ -25,18 +25,18 @@ interface Column {
 }
 
 
-export class PostgreSQLTreeDataProvider implements theia.TreeDataProvider<Node> {
+export class PostgreSQLTreeDataProvider implements vscode.TreeDataProvider<Node> {
 
-  public _onDidChangeTreeData: theia.EventEmitter<Node> = new theia.EventEmitter<Node>();
-  public readonly onDidChangeTreeData: theia.Event<Node> = this._onDidChangeTreeData.event;
+  public _onDidChangeTreeData: vscode.EventEmitter<Node> = new vscode.EventEmitter<Node>();
+  public readonly onDidChangeTreeData: vscode.Event<Node> = this._onDidChangeTreeData.event;
 
   constructor(public pool: Pool) { }
 
   public refresh(): void {
-    this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire(null);
   }
 
-  public getTreeItem(element: Node): theia.TreeItem {
+  public getTreeItem(element: Node): vscode.TreeItem {
     return element.getTreeItem();
   }
 
@@ -65,14 +65,14 @@ class SchemaNode implements Node {
 
   constructor(private readonly pool: Pool, private readonly schemaName: string) { }
 
-  public getTreeItem(): theia.TreeItem {
+  public getTreeItem(): vscode.TreeItem {
     return {
       label: this.schemaName,
-      collapsibleState: theia.TreeItemCollapsibleState.Collapsed,
-      contextValue: 'theia-postgres.tree.schema',
+      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+      contextValue: 'vscode-postgres.tree.schema',
       iconPath: {
-        light: '/hostedPlugin/dit_theia_postgres/resources/light/schema.svg',
-        dark: '/hostedPlugin/dit_theia_postgres/resources/dark/schema.svg'
+        light: '/hostedPlugin/dit_vscode_postgres/resources/light/schema.svg',
+        dark: '/hostedPlugin/dit_vscode_postgres/resources/dark/schema.svg'
       }
     };
   }
@@ -114,14 +114,14 @@ export class TableNode implements Node {
     public readonly is_table: boolean,
     public readonly schema: string) { }
 
-  public getTreeItem(): theia.TreeItem {
+  public getTreeItem(): vscode.TreeItem {
     return {
       label: this.table,
-      collapsibleState: theia.TreeItemCollapsibleState.Collapsed,
-      contextValue: 'theia-postgres.tree.table',
+      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+      contextValue: 'vscode-postgres.tree.table',
       iconPath: {
-        light: `/hostedPlugin/dit_theia_postgres/resources/light/${this.is_table ? 'table' : 'view'}.svg`,
-        dark: `/hostedPlugin/dit_theia_postgres/resources/dark/${this.is_table ? 'table' : 'view'}.svg`,
+        light: `/hostedPlugin/dit_vscode_postgres/resources/light/${this.is_table ? 'table' : 'view'}.svg`,
+        dark: `/hostedPlugin/dit_vscode_postgres/resources/dark/${this.is_table ? 'table' : 'view'}.svg`,
       }
     };
   }
@@ -195,7 +195,7 @@ class ColumnNode implements Node {
   constructor(private readonly column: Column) { }
 
   public async getChildren(): Promise<Node[]> { return []; }
-  public getTreeItem(): theia.TreeItem {
+  public getTreeItem(): vscode.TreeItem {
     let icon = 'column';
     let label = `${this.column.column_name} : ${this.column.data_type}`;
     let tooltip = label;
@@ -210,11 +210,11 @@ class ColumnNode implements Node {
     return {
       label,
       tooltip,
-      collapsibleState: theia.TreeItemCollapsibleState.None,
-      contextValue: 'theia-postgres.tree.column',
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      contextValue: 'vscode-postgres.tree.column',
       iconPath: {
-        light: `/hostedPlugin/dit_theia_postgres/resources/light/${icon}.svg`,
-        dark: `/hostedPlugin/dit_theia_postgres/resources/dark/${icon}.svg`
+        light: `/hostedPlugin/dit_vscode_postgres/resources/light/${icon}.svg`,
+        dark: `/hostedPlugin/dit_vscode_postgres/resources/dark/${icon}.svg`
       }
     };
   }
@@ -224,14 +224,14 @@ class ColumnNode implements Node {
 class InfoNode implements Node {
   constructor(private readonly label: string) { }
 
-  public getTreeItem(): theia.TreeItem {
+  public getTreeItem(): vscode.TreeItem {
     return {
       label: this.label.toString(),
-      collapsibleState: theia.TreeItemCollapsibleState.None,
-      contextValue: 'theia-postgres.tree.error',
+      collapsibleState: vscode.TreeItemCollapsibleState.None,
+      contextValue: 'vscode-postgres.tree.error',
       iconPath: {
-        light: '/hostedPlugin/dit_theia_postgres/resources/light/error.svg',
-        dark: '/hostedPlugin/dit_theia_postgres/resources/dark/error.svg'
+        light: '/hostedPlugin/dit_vscode_postgres/resources/light/error.svg',
+        dark: '/hostedPlugin/dit_vscode_postgres/resources/dark/error.svg'
       }
     };
   }

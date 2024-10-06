@@ -1,18 +1,18 @@
 import * as path from 'path';
-import * as theia from '@theia/plugin';
+import * as vscode from 'vscode';
 import { Pool } from 'pg';
 
-export function getRunCommand(runQueryAndDisplayResults: (sql: string, uri: theia.Uri, title: string) => void) {
+export function getRunCommand(runQueryAndDisplayResults: (sql: string, uri: vscode.Uri, title: string) => void) {
   return async function run() {
-    if (!theia.window.activeTextEditor || !theia.window.activeTextEditor.document) {
-      theia.window.showWarningMessage('No SQL file selected');
+    if (!vscode.window.activeTextEditor || !vscode.window.activeTextEditor.document) {
+      vscode.window.showWarningMessage('No SQL file selected');
       return;
     }
 
-    const editor = theia.window.activeTextEditor;
+    const editor = vscode.window.activeTextEditor;
     const selectionToTrim = editor.selection.isEmpty ? undefined : editor.selection;
     if (editor.document.getText(selectionToTrim).trim().length === 0) {
-      theia.window.showWarningMessage('No SQL found to run');
+      vscode.window.showWarningMessage('No SQL found to run');
       return;
     }
 

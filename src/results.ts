@@ -1,4 +1,4 @@
-import * as theia from '@theia/plugin';
+import * as vscode from 'vscode';
 import { randomBytes } from 'crypto';
 import { Pool, QueryResult, FieldDef } from 'pg';
 import * as Cursor from 'pg-cursor';
@@ -36,13 +36,14 @@ export function getRunQueryAndDisplayResults(pool: Pool) {
     var isActive = false;
     const panelId = randomBytes(16).toString('hex');
 
-    const panel = theia.window.createWebviewPanel(
-      'theia-postgres.results',
-      'Results: ' + title, {
-      area: theia.WebviewPanelTargetArea.Bottom,
-    }, {
-      enableScripts: true
-    });
+    const panel = vscode.window.createWebviewPanel(
+      'postgresql-explorer.results',
+      'Results: ' + title,
+      vscode.ViewColumn.One,
+      {
+        enableScripts: true
+      }
+    );
 
     panelResults[panelId] = {
       err: null,
@@ -64,7 +65,7 @@ export function getRunQueryAndDisplayResults(pool: Pool) {
       if (webviewPanel.active) {
         activeResults = panelResults[panelId].fullResults;
       }
-      theia.commands.executeCommand('setContext', 'theiaPostgresResultFocus', numActive > 0);
+      vscode.commands.executeCommand('setContext', 'vscodePostgresResultFocus', numActive > 0);
     });
 
     panel.webview.onDidReceiveMessage(
@@ -86,7 +87,7 @@ export function getRunQueryAndDisplayResults(pool: Pool) {
     return { panelId, panel };
   }
 
-  function recordError(panelId: string, panel: theia.WebviewPanel, err) {
+  function recordError(panelId: string, panel: vscode.WebviewPanel, err) {
     panelResults[panelId].err = err;
     postError(panel, err);
   }
@@ -100,7 +101,7 @@ export function getRunQueryAndDisplayResults(pool: Pool) {
     });
   }
 
-  async function recordResults(panelId: string, panel: theia.WebviewPanel, results: QueryResults) {
+  async function recordResults(panelId: string, panel: vscode.WebviewPanel, results: QueryResults) {
     panelResults[panelId].fullResults = {
       ...results,
       rows: panelResults[panelId].fullResults.rows.concat(results.rows),
@@ -108,7 +109,7 @@ export function getRunQueryAndDisplayResults(pool: Pool) {
     await postResults(panel, panelResults[panelId].fullResults, results);
   }
 
-  async function postResults(panel: theia.WebviewPanel, fullResults: QueryResults, results: QueryResults) {
+  async function postResults(panel: vscode.WebviewPanel, fullResults: QueryResults, results: QueryResults) {
     const maxLength = 500;
     for (let i = 0; i < results.rows.length; i += maxLength) {
       await sleep(1);
@@ -121,19 +122,19 @@ export function getRunQueryAndDisplayResults(pool: Pool) {
     }
   }
 
-  theia.window.registerWebviewPanelSerializer('theia-postgres.results', new (class implements theia.WebviewPanelSerializer {
-    async deserializeWebviewPanel(webviewPanel: theia.WebviewPanel, state: any) {
+  vscode.window.registerWebviewPanelSerializer('vscode-postgres.results', new (class implements vscode.WebviewPanelSerializer {
+    async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
       webviewPanel.webview.html = (state.panelId in panelResults) ? panelHtml(state.panelId) : '<p>The query must be re-run to see its results</p>';
     }
   }));
 
-  async function runQueryAndDisplayResults(sql: string, uri: theia.Uri, title: string) {
+  async function runQueryAndDisplayResults(sql: string, uri: vscode.Uri, title: string) {
     const client = await pool.connect();
 
     try {
       var cursor = client.query(new Cursor(sql, [], { text: sql, rowMode: 'array' }));
     } catch (err) {
-      theia.window.showErrorMessage(err.message);
+      vscode.window.showErrorMessage(err.message);
       return;
     }
 
@@ -198,8 +199,8 @@ export function panelHtml(panelId: string) {
     <head>
       <meta http-equiv="content-type" content="text/html;charset=UTF-8">
       <meta http-equiv="content-security-policy" content="default-src 'none'; script-src 'self' 'nonce-${nonce}'; style-src 'self' 'nonce-${nonce}'">
-      <link href="/hostedPlugin/dit_theia_postgres/resources/tabulator_simple.css" rel="stylesheet">
-      <script src="/hostedPlugin/dit_theia_postgres/resources/tabulator.min.js"></script>
+      <link href="/hostedPlugin/dit_vscode_postgres/resources/tabulator_simple.css" rel="stylesheet">
+      <script src="/hostedPlugin/dit_vscode_postgres/resources/tabulator.min.js"></script>
       <style nonce="${nonce}">
         body,
         html {
